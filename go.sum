@@ -1,0 +1,9 @@
+github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=
+github.com/gorilla/websocket v1.5.3/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
+github.com/hugolgst/rich-go v0.0.0-20240715122152-74618cc1ace2 h1:9qOViOQGFIP5ar+2NorfAIsfuADEKXtklySC0zNnYf4=
+github.com/hugolgst/rich-go v0.0.0-20240715122152-74618cc1ace2/go.mod h1:nGaW7CGfNZnhtiFxMpc4OZdqIexGXjUlBnlmpZmjEKA=
+github.com/rikkuness/discord-rpc v0.0.0-20200829012113-11191b75b58a h1:NYR1BqFjkLifKrLKQyIkJtz0xhNatQyBd19el6PJI8Y=
+github.com/rikkuness/discord-rpc v0.0.0-20200829012113-11191b75b58a/go.mod h1:wo+UHP0QZchh9tT2yCQWKjuHmgfekd4MwI3gnm5c0IM=
+gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce h1:+JknDZhAj8YMt7GC73Ei8pv4MzjDUNPHgQWJdtMAaDU=
+gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce/go.mod h1:5AcXVHNjg+BDxry382+8OKon8SEWiKktQR07RKPsv1c=
