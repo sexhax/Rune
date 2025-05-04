@@ -61,12 +61,12 @@ A powerful Discord selfbot written in Go with various utility and entertainment 
 ```
 3. Install dependencies:
 ```bash
-go mod download
+go mod tidy
 ```
 4. Build and run:
 ```bash
 go build
-./selfbot
+./selfbot or .\selfbot.exe
 ```
 
 ## Configuration
@@ -88,6 +88,12 @@ go build
 Use `&help` to see all available commands
 Use `&categories` to view command categories
 Use `&utilities`, `&fun`, `&info`, or `&nsfw` to see specific command categories
+
+## Credits
+
+- snow - inspiration
+- https://github.com/skifli/gocord - api wrapper
+- gpt4.1 - debugging 😭
 
 ## Author
 
