@@ -162,39 +162,36 @@ func loadConfig() (Config, error) {
 }
 
 func main() {
-	config, err := loadConfig()
+	// Load environment variables from .env file
+	err := godotenv.Load()
 	if err != nil {
-		fmt.Println("Error loading configuration:", err)
-		return
+		fmt.Println("Error loading .env file")
 	}
 
-	if !config.RPC.Enabled {
-		fmt.Println("RPC is not enabled in the config.")
+	// Example usage
+	config, err := loadConfig()
+	if err != nil {
+		fmt.Println("Error loading config:", err)
 		return
 	}
 
 	client, err := New(config.RPC.ApplicationID)
 	if err != nil {
-		fmt.Println("Error initializing RPC client:", err)
+		fmt.Println("Error creating RPC client:", err)
 		return
 	}
 	defer client.Close()
 
-	largeImage := config.RPC.LargeImage
-	smallImage := "" // You can extend this to handle small images if needed
-
-	err = client.SetActivity(config.RPC.State, config.RPC.Details, largeImage, config.RPC.LargeText)
+	err = client.SetActivity("Playing a game", "In a match", "large_image_key", "Large Image Text")
 	if err != nil {
 		fmt.Println("Error setting activity:", err)
 		return
 	}
 
-	fmt.Println("Game RPC enabled!")
-	fmt.Printf("Game: %s\n", config.RPC.State)
-	fmt.Printf("Details: %s\n", config.RPC.Details)
-	fmt.Printf("Large Image: %s\n", largeImage)
+	fmt.Println("Activity set successfully")
 
+	// Keep the program running
 	for {
-		time.Sleep(10 * time.Second) // Keep the bot running
+		time.Sleep(1 * time.Minute)
 	}
 }
