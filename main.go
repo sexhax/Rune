@@ -612,6 +612,9 @@ func handleMessage(message Message) {
 	case "psearch":
 		fmt.Println("Executing pornhubsearch command...")
 		handlePornhubSearch(message, args)
+	case "google":
+		fmt.Println("Executing google...")
+		handleGoogleSearch(message, args)
 	case "tits":
 		fmt.Println("Executing titty command...")
 		handleTits(message)
@@ -1868,7 +1871,7 @@ func handleIPLookup(message Message, args []string) {
 		return
 	}
 
-	response := fmt.Sprintf("```ansi\n\u001b[0;36m[IP LOOKUP]\u001b[0m\n\n"+
+	response := fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m\n\n"+
 		"IP: \u001b[0;33m%s\u001b[0m\n"+
 		"Location: %s, %s, %s\n"+
 		"Coordinates: %f, %f\n"+
@@ -1970,6 +1973,19 @@ func handlePornhubSearch(message Message, args []string) {
 	pornhubURL := fmt.Sprintf("https://www.pornhub.com/video/search?search=%s", searchQuery)
 
 	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🔍 PornHub Search:```\n%s", pornhubURL))
+}
+
+func handleGoogleSearch(message Message, args []string) {
+	if len(args) == 0 {
+		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nPlease provide a search term!```")
+		return
+	}
+
+	searchQuery := url.QueryEscape(strings.Join(args, " "))
+
+	googleURL := fmt.Sprintf("https://www.google.com/search?q=%s", searchQuery)
+
+	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🔍 Google Search:```\n%s", googleURL))
 }
 
 func handleShortenURL(message Message, args []string) {
