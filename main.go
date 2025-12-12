@@ -2,14 +2,12 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"math/rand"
-	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -23,7 +21,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"google.golang.org/genai"
 )
 
 type Config struct {
@@ -604,8 +601,7 @@ func handleMessage(message Message) {
 		fmt.Println("Executing info command...")
 		handleInfo(message)
 	case "ai":
-		fmt.Println("Executing ai command...")
-		handleAI(message, args)
+		handleAI(message)
 	case "nsfw":
 		fmt.Println("Executing NSFW command...")
 		handleNSFW(message)
@@ -2022,7 +2018,12 @@ func handleShortenURL(message Message, args []string) {
 	editMessage(message.ChannelID, statusMsgID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🔗 Shortened URL:```\n%s", shortURL))
 }
 
-func handleAI(message Message, args []string) {
+func handleAI(message Message) {
+		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nFunction removed due to gemini being a gay retard.```")
+		return
+}
+
+/* func handleAI(message Message, args []string) {
 	if len(args) == 0 {
 		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nPlease provide a prompt for the AI to respond to.```")
 		return
@@ -2119,7 +2120,7 @@ func handleAI(message Message, args []string) {
 	} else {
 		sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n%s```", response))
 	}
-}
+} */
 
 func saveConfig() error {
 	configData, err := json.MarshalIndent(config, "", "    ")
