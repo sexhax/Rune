@@ -1,54 +1,63 @@
-# RUNE Discord Selfbot
+# Rune - A Fun Discord Selfbot
 
-A powerful Discord selfbot written in Go with various utility and entertainment features.
+Hey there! Rune is a lightweight and feature-packed selfbot for Discord, built in Go. It's designed to add some useful tools, silly fun, and even a bit of edge to your Discord experience—all running from your own account.
 
-⚠️ **Disclaimer**: Using selfbots is against Discord's Terms of Service. Use at your own risk.
+**Important Warning**: Selfbots like this go against Discord's Terms of Service. If you use it, there's a real risk of your account getting banned. I'm not responsible for anything that happens—use it at your own risk, and maybe on a throwaway account if you're just testing.
 
-## Features
+## What Can It Do?
 
-### Utility Commands
-- `ping` - Check bot latency
-- `clear [count]` - Delete messages (default: 10)
-- `say <message>` - Make the bot say something
-- `weather [location]` - Get current weather information
-- `ar` - Toggle auto responder
-- `ap @user` - Start autopressure on user
-- `status` - Change Discord status
-- `ip <address>` - Lookup IP information
-- `encode/decode` - Base64 encoding/decoding
-- `password [length]` - Generate secure passwords
-- `ai [prompt]` - Get AI-generated responses
-- `shorten <url>` - URL shortener
-- `setprefix [prefix]` - Change command prefix
-- `nitrosniper` - Automatic nitro code claiming
+Rune comes with a bunch of commands, grouped into categories. The default prefix is `&`, but you can change it.
 
-### Fun Commands
-- `8ball <question>` - Ask the magic 8-ball
-- `roll [sides]` - Roll a die
-- `rizz` - Get random pickup lines
-- `femboy` - Calculate femboy percentage
-- `quote` - Random quotes
-- `joke` - Random jokes
-- `urban <term>` - Urban Dictionary lookup
-- `coinflip` - Flip a coin
-- `fact` - Random facts
-- `meme` - Random meme phrases
+### Utility Commands (Handy Stuff)
+These help with everyday things:
+- `&ping` — Check how fast it's responding
+- `&clear [count]` — Delete your recent messages (defaults to 10)
+- `&say <message>` — Make your account say whatever you want
+- `&weather [location]` — Get the current weather for a place
+- `&ar` — Toggle an auto-responder on/off
+- `&ap @user` — Start "autopressure" on a mentioned user (spam pings? Be nice!)
+- `&status` — Set a custom Discord status
+- `&ip <address>` — Look up info about an IP
+- `&encode` / `&decode` — Base64 encoding and decoding
+- `&password [length]` — Generate a strong random password
+- `&ai <prompt>` — Chat with Google's Gemini AI for smart (or fun) responses
+- `&shorten <url>` — Shorten a long URL
+- `&setprefix <new>` — Change the command prefix
+- `&nitrosniper` — Automatically claim Discord Nitro gift codes if they pop up
 
-### Info Commands
-- `whoami` - Show user info
-- `avatar` - Get avatar URL
-- `stats` - Show bot statistics
-- `credits` - Display bot credits
+### Fun Commands (For Laughs)
+- `&8ball <question>` — Ask the magic 8-ball for advice
+- `&roll [sides]` — Roll a dice (default 6 sides)
+- `&rizz` — Get a random pickup line
+- `&femboy` — Calculates your "femboy percentage" (purely for memes)
+- `&quote` — A random inspirational (or silly) quote
+- `&joke` — Hear a random joke
+- `&urban <term>` — Look up slang on Urban Dictionary
+- `&coinflip` — Heads or tails?
+- `&fact` — A random interesting fact
+- `&meme` — Some random meme text
 
-### NSFW Commands
-- `psearch <term>` - PornHub search
-- `tits` - Random NSFW images
-- `catgirl` - Random catgirl images
+### Info Commands (About You or the Bot)
+- `&whoami` — Shows your user info
+- `&avatar` — Gets your avatar URL
+- `&stats` — Bot uptime and stats
+- `&credits` — Shoutouts to helpers
 
-## Setup
+### NSFW Commands (18+ Only, Use Responsibly)
+These pull adult content—keep it private!
+- `&psearch <term>` — Search on PornHub
+- `&tits` — Random NSFW images
+- `&catgirl` — Random catgirl images
+
+In Discord, try `&help` for the full list, `&categories` for an overview, or things like `&utilities` to list just one group.
+
+## How to Get It Running
+
+It's super simple if you have Go installed:
 
 1. Clone the repository
-2. Create a `config.json` file with the following structure:
+
+2. Create a `config.json` file with the following structure or use config.json.example and rename it to config.json:
 ```json
 {
     "token": "YOUR_DISCORD_TOKEN",
