@@ -626,7 +626,6 @@ func handleMessage(message Message) {
 	switch command {
 	case "help":
 		fmt.Println("Executing help command...")
-		time.Sleep(3 * time.Second)
 		handleHelp(message)
 	case "categories":
 		fmt.Println("Executing categories command...")
