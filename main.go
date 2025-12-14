@@ -669,9 +669,6 @@ func handleMessage(message Message) {
 	case "clear":
 		fmt.Println("Executing clear command...")
 		handleClear(message, args)
-	case "nitrosniper":
-		fmt.Println("Executing nitrosniper command...")
-		handleNitroSniper(message)
 	case "avatar":
 		fmt.Println("Executing avatar command...")
 		handleAvatar(message)
@@ -803,7 +800,6 @@ func handleUtilities(message Message) {
 		"\u001b[0;32m" + config.Prefix + "ai [prompt]\u001b[0m - Get ai results\n" +
 		"\u001b[0;32m" + config.Prefix + "shorten <url>\u001b[0m - Shorten a URL\n" +
 		"\u001b[0;32m" + config.Prefix + "setprefix [prefix]\u001b[0m - changes prefix\n" +
-		"\u001b[0;32m" + config.Prefix + "nitrosniper\u001b[0m - Toggle Nitro sniper\n" +
 		"\u001b[0;32m" + config.Prefix + "cloneserver\u001b[0m - Clone a Discord server\n" +
 		"```"
 	sendMessage(message.ChannelID, utilitiesText)
@@ -883,50 +879,6 @@ func handleAutoResponder(message Message) {
 
 	fmt.Printf("Auto responder %s\n", status)
 	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nAuto responder %s```", status))
-}
-
-func handleNitroSniper(message Message) {
-	sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nTrying claim Nitro...```")
-	re := regexp.MustCompile(`https://discord\.gift/(\w{16})`)
-	matches := re.FindStringSubmatch(message.Content)
-
-	if len(matches) <= 1 {
-		return
-	}
-
-	code := matches[1]
-
-	url := "https://discord.com/api/v9/entitlements/gift-codes/" + code + "/redeem"
-
-	req, err := http.NewRequest("POST", url, nil)
-	if err != nil {
-		log.Println("Error creating request:", err)
-		return
-	}
-
-	req.Header.Set("Authorization", config.Token)
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Println("Error sending request:", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == 200 {
-		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nSuccessfully claimed Nitro!```")
-	} else {
-		body, _ := io.ReadAll(resp.Body)
-		var errorResp struct {
-			Message string `json:"message"`
-		}
-		json.Unmarshal(body, &errorResp)
-		errorMessage := errorResp.Message
-		if errorMessage == "" {
-			errorMessage = resp.Status
-		}
-		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nFailed to claim Nitro: "+errorMessage+"```")
-	}
 }
 
 func handleFemboy(message Message, args []string) {
