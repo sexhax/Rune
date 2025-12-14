@@ -1,0 +1,8 @@
+{
+    "token": "",
+    "OwnerID": "",
+    "prefix": ".",
+    "gemini_api_key": "",
+    "auto_response_enabled": false/true,
+    "auto_response_phrase": "Hey! \u003cuser\u003e, im currently not in the mood to respond!"
+}
