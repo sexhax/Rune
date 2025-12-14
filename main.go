@@ -189,7 +189,7 @@ func triggerTyping(channelID string) {
         fmt.Printf("Error sending typing trigger: %v\n", err)
     } else {
         // Simulate human-like typing delay: 2 to 2.5 seconds
-        delay := 2000 + rand.Intn(500)  // 2000-2499 ms
+        delay := 500 + rand.Intn(500)  // 2000-2499 ms
         time.Sleep(time.Duration(delay) * time.Millisecond)
     }
 }
