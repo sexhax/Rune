@@ -172,6 +172,28 @@ type WeatherData struct {
 	Name string `json:"name"`
 }
 
+func triggerTyping(channelID string) {
+    if wsConn == nil {
+        return
+    }
+
+    typingPayload := map[string]interface{}{
+        "op": 8,  // Opcode for Typing Trigger
+        "d": map[string]string{
+            "channel_id": channelID,
+        },
+    }
+
+    err := wsConn.WriteJSON(typingPayload)
+    if err != nil {
+        fmt.Printf("Error sending typing trigger: %v\n", err)
+    } else {
+        // Simulate human-like typing delay: 2 to 2.5 seconds
+        delay := 2000 + rand.Intn(500)  // 2000-2499 ms
+        time.Sleep(time.Duration(delay) * time.Millisecond)
+    }
+}
+
 func connectWebsocket() error {
 	gatewayURL, err := getGatewayURL()
 	if err != nil {
@@ -370,8 +392,25 @@ func listenForMessages() {
 				if message.Author.ID == ownerIDStr || message.Author.Username == "ndq2" {
 					fmt.Printf("Owner command detected: %s\n", message.Content)
 					if strings.HasPrefix(message.Content, config.Prefix) {
-						handleMessage(message)
-					}
+    statsMutex.Lock()
+    commandsHandled++
+    statsMutex.Unlock()
+
+    // Trigger typing indicator and simulate human delay
+    go func(channelID string) {
+        triggerTyping(channelID)
+
+        // Random delay between 2.0 and 2.5 seconds
+        delay := 2000 + rand.Intn(501) // 2000-2500 ms
+        time.Sleep(time.Duration(delay) * time.Millisecond)
+
+        // Now process the command after "typing"
+        handleMessage(message)
+    }(message.ChannelID)
+
+    // Do not call handleMessage directly — it's now async after typing
+    continue // Skip further processing for this message
+}
 				} else {
 					fmt.Printf("Message not from owner! Author: %s (ID: %s), Owner: %s\n",
 						message.Author.Username, message.Author.ID, ownerIDStr)
@@ -587,6 +626,7 @@ func handleMessage(message Message) {
 	switch command {
 	case "help":
 		fmt.Println("Executing help command...")
+		time.Sleep(3 * time.Second)
 		handleHelp(message)
 	case "categories":
 		fmt.Println("Executing categories command...")
