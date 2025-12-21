@@ -192,14 +192,12 @@ Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/14
 	}
 	defer resp.Body.Close()
 
-	// Optional: log failures
 	if resp.StatusCode != 204 {
 		fmt.Printf("Typing failed, status: %d\n", resp.StatusCode)
 		return
 	}
 
-	// ✅ Human-like delay: 2000–2500 ms
-	delay := 2000 + rand.Intn(500) // 2000–2499
+	delay := 2000 + rand.Intn(500) 
 	time.Sleep(time.Duration(delay) * time.Millisecond)
 }
 
