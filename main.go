@@ -172,25 +172,35 @@ type WeatherData struct {
 }
 
 func triggerTyping(channelID string) {
-    if wsConn == nil {
-        return
-    }
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf("https://discord.com/api/v10/channels/%s/typing", channelID),
+		nil,
+	)
+	if err != nil {
+		return
+	}
 
-    typingPayload := map[string]interface{}{
-        "op": 8,  // Opcode for Typing Trigger
-        "d": map[string]string{
-            "channel_id": channelID,
-        },
-    }
+	req.Header.Set("Authorization", config.Token)
+	req.Header.Set("User-Agent", "
+Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36")
+	req.Header.Set("Content-Type", "application/json")
 
-    err := wsConn.WriteJSON(typingPayload)
-    if err != nil {
-        fmt.Printf("Error sending typing trigger: %v\n", err)
-    } else {
-        // Simulate human-like typing delay: 2 to 2.5 seconds
-        delay := 500 + rand.Intn(500)  // 2000-2499 ms
-        time.Sleep(time.Duration(delay) * time.Millisecond)
-    }
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	// Optional: log failures
+	if resp.StatusCode != 204 {
+		fmt.Printf("Typing failed, status: %d\n", resp.StatusCode)
+		return
+	}
+
+	// ✅ Human-like delay: 2000–2500 ms
+	delay := 2000 + rand.Intn(500) // 2000–2499
+	time.Sleep(time.Duration(delay) * time.Millisecond)
 }
 
 func connectWebsocket() error {
