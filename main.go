@@ -185,7 +185,7 @@ func triggerTyping(channelID string) {
 	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36")
 	req.Header.Set("Content-Type", "application/json")
 
-
+	time.Sleep(2 * time.Second)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return
@@ -405,7 +405,7 @@ func listenForMessages() {
 
     // Trigger typing indicator and simulate human delay
     go func(channelID string) {
-        triggerTyping(channelID)
+       triggerTyping(channelID)
 
         // Random delay between 2.0 and 2.5 seconds
         delay := 2000 + rand.Intn(501) // 2000-2500 ms
