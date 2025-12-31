@@ -197,7 +197,7 @@ func triggerTyping(channelID string) {
 		return
 	}
 
-	delay := 2000 + rand.Intn(500) 
+	delay := 1500 + rand.Intn(500) 
 	time.Sleep(time.Duration(delay) * time.Millisecond)
 }
 
