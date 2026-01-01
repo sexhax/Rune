@@ -185,7 +185,7 @@ func triggerTyping(channelID string) {
 	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36")
 	req.Header.Set("Content-Type", "application/json")
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return
@@ -197,7 +197,35 @@ func triggerTyping(channelID string) {
 		return
 	}
 
-	delay := 1500 + rand.Intn(500) 
+	delay := 500 + rand.Intn(500) 
+	time.Sleep(time.Duration(delay) * time.Millisecond)
+}
+
+func triggerTypingAP(channelID string) {
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf("https://discord.com/api/v10/channels/%s/typing", channelID),
+		nil,
+	)
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("Authorization", config.Token)
+	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36")
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 204 {
+		fmt.Printf("Typing failed, status: %d\n", resp.StatusCode)
+		return
+	}
+
+	delay := rand.Intn(150) 
 	time.Sleep(time.Duration(delay) * time.Millisecond)
 }
 
@@ -419,8 +447,8 @@ func listenForMessages() {
     continue // Skip further processing for this message
 }
 				} else {
-					fmt.Printf("Message not from owner! Author: %s (ID: %s), Owner: %s\n",
-						message.Author.Username, message.Author.ID, ownerIDStr)
+					/* fmt.Printf("Message not from owner! Author: %s (ID: %s), Owner: %s\n",
+						message.Author.Username, message.Author.ID, ownerIDStr) */
 				}
 			}
 
@@ -1460,7 +1488,7 @@ func runAutoPressure(channelID, targetID string, stopChan chan bool) {
 			message := "# " + randomWord + " <@" + targetID + ">"
 
 			apMutex.Unlock()
-
+			triggerTypingAP(channelID)
 			msgID := sendMessage(channelID, message)
 
 			if msgID == "" {
