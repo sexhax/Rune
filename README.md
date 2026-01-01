@@ -8,22 +8,22 @@ Hey there! Rune is a lightweight and feature-packed selfbot for Discord, built i
 
 Rune comes with a bunch of commands, grouped into categories. The default prefix is `&`, but you can change it.
 
-### Utility Commands (Handy Stuff)
+### Utility Commands
 These help with everyday things:
 - `&ping` — Check how fast it's responding
 - `&clear [count]` — Delete your recent messages (defaults to 10)
-- `&say <message>` — Make your account say whatever you want
-- `&weather [location]` — Get the current weather for a place
+- `&weather [location] (api became payed)` — Get the current weather for a place
 - `&ar` — Toggle an auto-responder on/off
-- `&ap @user` — Start "autopressure" on a mentioned user (spam pings? Be nice!)
+- `&ap @user` — Start "autopressure" on a mentioned user (spam pings with message)
 - `&status` — Set a custom Discord status
 - `&ip <address>` — Look up info about an IP
 - `&encode` / `&decode` — Base64 encoding and decoding
 - `&password [length]` — Generate a strong random password
-- `&ai <prompt>` — Chat with Google's Gemini AI for smart (or fun) responses
+- `&ai <prompt> (removed)` — Chat with Google's Gemini AI for smart (or fun) responses
 - `&shorten <url>` — Shorten a long URL
 - `&setprefix <new>` — Change the command prefix
-- `&nitrosniper` — Automatically claim Discord Nitro gift codes if they pop up
+- `&nitrosniper (notworking)` — Automatically claim a nitro gift when sent in channels you can access
+- `&google <query>` — Googles something
 
 ### Fun Commands (For Laughs)
 - `&8ball <question>` — Ask the magic 8-ball for advice
@@ -62,7 +62,7 @@ It's super simple if you have Go installed:
 {
     "token": "YOUR_DISCORD_TOKEN",
     "OwnerID": "YOUR_DISCORD_USER_ID",
-    "prefix": "&",
+    "prefix": "PREFIX",
     "gemini_api_key": "YOUR_GEMINI_API_KEY",
     "auto_response_enabled": false,
     "auto_response_phrase": ""
@@ -83,7 +83,7 @@ go build
 - `token`: Your Discord user token
 - `OwnerID`: Your Discord user ID
 - `prefix`: Command prefix (default: &)
-- `gemini_api_key`: API key for AI responses
+- `gemini_api_key`: API key for AI responses (i think it needs to be payed so i removed the feature)
 - `auto_response_enabled`: Enable/disable auto responses
 - `auto_response_phrase`: Custom auto response message
 
@@ -107,3 +107,4 @@ Use `&utilities`, `&fun`, `&info`, or `&nsfw` to see specific command categories
 ## Author
 
 Created by Eclipse
+
