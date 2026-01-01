@@ -797,7 +797,7 @@ func handleUtilities(message Message) {
 		"\u001b[0;32m" + config.Prefix + "ar\u001b[0m - Toggle auto responder\n" +
 		"\u001b[0;32m" + config.Prefix + "ap @user\u001b[0m - Start autopressure on user\n" +
 		"\u001b[0;32m" + config.Prefix + "ap stop\u001b[0m - Stop autopressure\n" +
-		"\u001b[0;32m" + config.Prefix + "status <online|idle|dnd|invisible>\u001b[0m - Change Discord status (not working)\n" +
+		"\u001b[0;32m" + config.Prefix + "status <online|idle|dnd|invisible>\u001b[0m - Change Discord status\n" +
 		"\u001b[0;32m" + config.Prefix + "rpc <on|off|status|set>\u001b[0m - Manage Discord Rich Presence (not working)\n" +
 		"\u001b[0;32m" + config.Prefix + "ip <address>\u001b[0m - Lookup IP information\n" +
 		"\u001b[0;32m" + config.Prefix + "encode <input>\u001b[0m - Encode input to base64\n" +
