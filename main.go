@@ -1499,7 +1499,10 @@ func extractMentions(content string) []string {
 
 func handleStatus(message Message, args []string) {
 	if len(args) == 0 {
-		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nPlease provide a status: online, idle, dnd, invisible```")
+		sendMessage(
+			message.ChannelID,
+			"```ansi\n\u001b[0;36m[RUNE]\u001b[0m\nPlease provide a status: online, idle, dnd, invisible```",
+		)
 		return
 	}
 
@@ -1508,40 +1511,74 @@ func handleStatus(message Message, args []string) {
 
 	switch status {
 	case "online":
-		statusText = StatusOnline
+		statusText = "online"
 	case "idle":
-		statusText = StatusIdle
+		statusText = "idle"
 	case "dnd", "do_not_disturb":
-		statusText = StatusDND
+		statusText = "dnd"
 	case "invisible", "offline":
-		statusText = StatusInvisible
+		statusText = "invisible"
 	default:
-		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nInvalid status. Use online, idle, dnd, or invisible```")
+		sendMessage(
+			message.ChannelID,
+			"```ansi\n\u001b[0;36m[RUNE]\u001b[0m\nInvalid status. Use online, idle, dnd, or invisible```",
+		)
+		return
+	}
+
+	if err := updateStatusREST(statusText); err != nil {
+		sendMessage(
+			message.ChannelID,
+			fmt.Sprintf(
+				"```ansi\n\u001b[0;36m[RUNE]\u001b[0m\nError changing status: %s```",
+				err.Error(),
+			),
+		)
 		return
 	}
 
 	currentStatus = statusText
-	if err := updateStatus(statusText); err != nil {
-		sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nError changing status: %s```", err.Error()))
-		return
-	}
 
-	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nStatus updated to %s```", status))
+	sendMessage(
+		message.ChannelID,
+		fmt.Sprintf(
+			"```ansi\n\u001b[0;36m[RUNE]\u001b[0m\nStatus updated to %s```",
+			status,
+		),
+	)
 }
 
-func updateStatus(status string) error {
+func updateStatusREST(status string) error {
+	url := "https://discord.com/api/v10/users/@me/settings"
+
 	payload := map[string]interface{}{
-		"op": GatewayOpcodeStatusUpdate,
-		"d": map[string]interface{}{
-			"since":      nil,
-			"activities": []interface{}{},
-			"status":     status,
-			"afk":        false,
-		},
+		"status": status,       // online, idle, dnd, invisible
+		"custom_status": nil,
 	}
 
-	if err := wsConn.WriteJSON(payload); err != nil {
-		return fmt.Errorf("failed to update status: %w", err)
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal payload: %w", err)
+	}
+
+	req, err := http.NewRequest("PATCH", url, bytes.NewBuffer(body))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", config.Token)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("status update failed (%d): %s", resp.StatusCode, string(b))
 	}
 
 	return nil
