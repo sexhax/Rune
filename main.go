@@ -100,7 +100,7 @@ var (
 	apActive            bool
 	apStopChan          chan bool
 	apTargetID          string
-	apWords             = []string{"je kanker vader", "Ratio", "Clown", "Bozo", "Failure", "Trash", "Cry", "Skill issue", "nigger", "ape", "monkey boy", "ching chong"}
+	apWords             = []string{"je kanker vader", "Ratio", "Clown", "Bozo",   "Cry", "Skill issue", "nigger", "ape", "monkey boy", "ching chong", "vaderloos kankerjong", "zemmer", "vieze vuile kanker aap", "dikke strontneger"}
 
 	currentStatus = StatusOnline
 
@@ -779,8 +779,8 @@ func handleHelp(message Message) {
 func handleCategories(message Message) {
 	categoriesText := "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n" +
 		"Command Categories:\n\n" +
-		"\u001b[0;33mUtilities\u001b[0m - Useful tools and functions\n" +
-		"\u001b[0;33mFun\u001b[0m - Entertainment and random commands\n" +
+		"\u001b[0;33mUtilities\u001b[0m - Usefull stuff\n" +
+		"\u001b[0;33mFun\u001b[0m - Kinda fun commands\n" +
 		"\u001b[0;33mInfo\u001b[0m - Information and statistics\n\n" +
 		"\u001b[0;33mNSFW\u001b[0m - Not safe for work\n\n" +
 		"Use " + config.Prefix + "<category> to see commands in each category\n" +
@@ -793,21 +793,20 @@ func handleUtilities(message Message) {
 		"\u001b[0;33mUtility Commands:\u001b[0m\n\n" +
 		"\u001b[0;32m" + config.Prefix + "ping\u001b[0m - Check bot latency\n" +
 		"\u001b[0;32m" + config.Prefix + "clear [count]\u001b[0m - Delete messages (default: 10)\n" +
-		"\u001b[0;32m" + config.Prefix + "say <message>\u001b[0m - Make the bot say something\n" +
-		"\u001b[0;32m" + config.Prefix + "weather [location]\u001b[0m - Get current weather\n" +
+		"\u001b[0;32m" + config.Prefix + "weather [location]\u001b[0m - Get current weather (api became payed)\n" +
 		"\u001b[0;32m" + config.Prefix + "ar\u001b[0m - Toggle auto responder\n" +
 		"\u001b[0;32m" + config.Prefix + "ap @user\u001b[0m - Start autopressure on user\n" +
 		"\u001b[0;32m" + config.Prefix + "ap stop\u001b[0m - Stop autopressure\n" +
-		"\u001b[0;32m" + config.Prefix + "status <online|idle|dnd|invisible>\u001b[0m - Change Discord status\n" +
-		"\u001b[0;32m" + config.Prefix + "rpc <on|off|status|set>\u001b[0m - Manage Discord Rich Presence\n" +
+		"\u001b[0;32m" + config.Prefix + "status <online|idle|dnd|invisible>\u001b[0m - Change Discord status (not working)\n" +
+		"\u001b[0;32m" + config.Prefix + "rpc <on|off|status|set>\u001b[0m - Manage Discord Rich Presence (not working)\n" +
 		"\u001b[0;32m" + config.Prefix + "ip <address>\u001b[0m - Lookup IP information\n" +
-		"\u001b[0;32m" + config.Prefix + "encode <text>\u001b[0m - Encode text to base64\n" +
-		"\u001b[0;32m" + config.Prefix + "decode <text>\u001b[0m - Decode base64 to text\n" +
+		"\u001b[0;32m" + config.Prefix + "encode <input>\u001b[0m - Encode input to base64\n" +
+		"\u001b[0;32m" + config.Prefix + "decode <base64>\u001b[0m - Decode base64 to text\n" +
 		"\u001b[0;32m" + config.Prefix + "password [length]\u001b[0m - Generate a secure password\n" +
-		"\u001b[0;32m" + config.Prefix + "ai [prompt]\u001b[0m - Get ai results\n" +
+		"\u001b[0;32m" + config.Prefix + "ai [prompt]\u001b[0m - Get ai results (removed)\n" +
 		"\u001b[0;32m" + config.Prefix + "shorten <url>\u001b[0m - Shorten a URL\n" +
 		"\u001b[0;32m" + config.Prefix + "setprefix [prefix]\u001b[0m - changes prefix\n" +
-		"\u001b[0;32m" + config.Prefix + "cloneserver\u001b[0m - Clone a Discord server\n" +
+		"\u001b[0;32m" + config.Prefix + "cloneserver\u001b[0m - Clone a Discord server (gotta reimplement)\n" +
 		"```"
 	sendMessage(message.ChannelID, utilitiesText)
 }
@@ -818,7 +817,7 @@ func handleFun(message Message) {
 		"\u001b[0;32m" + config.Prefix + "8ball <question>\u001b[0m - Ask the magic 8ball\n" +
 		"\u001b[0;32m" + config.Prefix + "roll [sides]\u001b[0m - Roll a die (default: 6 sides)\n" +
 		"\u001b[0;32m" + config.Prefix + "rizz\u001b[0m - Get a random pickup line\n" +
-		"\u001b[0;32m" + config.Prefix + "femboy\u001b[0m - Calculate femboy percentage\n" +
+		"\u001b[0;32m" + config.Prefix + "femboy\u001b[0m - femboy percentage of user\n" +
 		"\u001b[0;32m" + config.Prefix + "quote\u001b[0m - Get a random quote\n" +
 		"\u001b[0;32m" + config.Prefix + "joke\u001b[0m - Get a random joke\n" +
 		"\u001b[0;32m" + config.Prefix + "urban <term>\u001b[0m - Look up a term on Urban Dictionary\n" +
@@ -1354,10 +1353,10 @@ func handleAvatar(message Message) {
 func handleUserInfo(message Message) {
 	info := fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n"+
 		"User Information:\n"+
-		"🪪 ID: %s\n"+
-		"👤 Username: %s\n"+
-		"🤖 Bot: %t\n"+
-		"📆 Account Created: Unknown```",
+		"userID: %s\n"+
+		"Username: %s\n"+
+		"Bot: %t\n"+
+		"Account Created: Unknown```",
 		message.Author.ID, message.Author.Username, message.Author.Bot)
 
 	sendMessage(message.ChannelID, info)
@@ -1366,7 +1365,7 @@ func handleUserInfo(message Message) {
 func handleCredits(message Message) {
 	creditsText := "```ansi\n\u001b[0;36m[CREDITS]\u001b[0m\n\n" +
 		"Bot created by: \u001b[0;35mEclipse\u001b[0m\n" +
-		"Thanks for using RUNE Selfbot!\n" +
+		"Thanks for using RUNE!\n" +
 		"```"
 
 	sendMessage(message.ChannelID, creditsText)
@@ -1376,7 +1375,7 @@ func handleAutoPressure(message Message, args []string) {
 	apMutex.Lock()
 	defer apMutex.Unlock()
 
-	fmt.Printf("AP command received with args: %v\n", args)
+	fmt.Printf("AP received with args: %v\n", args)
 	fmt.Printf("Message content: %s\n", message.Content)
 
 	if len(args) > 0 && strings.ToLower(args[0]) == "stop" {
@@ -1413,7 +1412,7 @@ func handleAutoPressure(message Message, args []string) {
 	}
 
 	if targetID == "" {
-		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nPlease mention a user or provide a user ID to start autopressure.```")
+		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nPlease mention a user or provide a user ID to start.```")
 		return
 	}
 
