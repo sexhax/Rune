@@ -102,7 +102,7 @@ Use `&utilities`, `&fun`, `&info`, or `&nsfw` to see specific command categories
 
 - advrso - inspiration
 - https://github.com/skifli/gocord - api wrapper
-- gpt4.1 - debugging 😭
+- gpt4.1 - debugging
 
 ## Author
 
