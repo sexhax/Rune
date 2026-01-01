@@ -100,7 +100,7 @@ Use `&utilities`, `&fun`, `&info`, or `&nsfw` to see specific command categories
 
 ## Credits
 
-- snow - inspiration
+- advrso - inspiration
 - https://github.com/skifli/gocord - api wrapper
 - gpt4.1 - debugging 😭
 
