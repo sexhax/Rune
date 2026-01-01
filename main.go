@@ -2198,7 +2198,7 @@ func saveConfig() error {
 }
 
 func main() {
-	fmt.Println("Starting Discord selfbot...")
+	fmt.Println("Starting...")
 	fmt.Printf("Using token: %s...\n", config.Token[:15])
 	fmt.Printf("Owner ID: %.0f\n", config.OwnerID)
 	fmt.Printf("Command prefix: %s\n", config.Prefix)
@@ -2208,7 +2208,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("Bot is now running. Press Ctrl+C to exit.")
+	fmt.Println("Running. Press Ctrl+C to exit.")
 	go listenForMessages()
 
 	sc := make(chan os.Signal, 1)
