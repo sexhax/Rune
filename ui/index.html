@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RUNE - Discord Selfbot Control Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
+        }
+        .pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .toast {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold mb-2 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                RUNE Control Panel
+            </h1>
+            <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-green-500 rounded-full pulse-ring"></div>
+                <span class="text-gray-400" id="connectionStatus">Connected</span>
+            </div>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
+            <h2 class="text-xl font-semibold mb-4 text-cyan-400">Statistics</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="statsContainer">
+                <div class="bg-gray-700 rounded p-4">
+                    <div class="text-sm text-gray-400">Uptime</div>
+                    <div class="text-2xl font-bold" id="uptime">Loading...</div>
+                </div>
+                <div class="bg-gray-700 rounded p-4">
+                    <div class="text-sm text-gray-400">Commands Handled</div>
+                    <div class="text-2xl font-bold" id="commandsHandled">0</div>
+                </div>
+                <div class="bg-gray-700 rounded p-4">
+                    <div class="text-sm text-gray-400">Messages Logged</div>
+                    <div class="text-2xl font-bold" id="messagesLogged">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Toggles -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
+            <h2 class="text-xl font-semibold mb-4 text-cyan-400">Feature Toggles</h2>
+            <div class="space-y-4">
+                <!-- Auto Responder Toggle -->
+                <div class="flex items-center justify-between bg-gray-700 rounded p-4">
+                    <div>
+                        <div class="font-semibold">Auto Responder</div>
+                        <div class="text-sm text-gray-400">Automatically respond when mentioned</div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="autoResponderToggle" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                    </label>
+                </div>
+
+                <!-- Auto Emoji Toggle -->
+                <div class="flex items-center justify-between bg-gray-700 rounded p-4">
+                    <div>
+                        <div class="font-semibold">Auto Emoji</div>
+                        <div class="text-sm text-gray-400">Automatically react to owner's messages</div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="autoEmojiToggle" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
+            <h2 class="text-xl font-semibold mb-4 text-cyan-400">Settings</h2>
+            <div class="space-y-4">
+                <!-- Prefix -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">Command Prefix</label>
+                    <input type="text" id="prefixInput" maxlength="1" class="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="&">
+                </div>
+
+                <!-- Auto Response Phrase -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">Auto Response Phrase</label>
+                    <textarea id="autoResponsePhraseInput" rows="3" class="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="Enter auto response phrase..."></textarea>
+                    <div class="text-xs text-gray-400 mt-1">Use &lt;user&gt; to insert the username</div>
+                </div>
+
+                <!-- Auto Emoji -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">Auto Emoji</label>
+                    <input type="text" id="autoEmojiInput" class="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="👍">
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Selector -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
+            <h2 class="text-xl font-semibold mb-4 text-cyan-400">Discord Status</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                <button id="statusOnline" class="status-btn bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold transition-colors">Online</button>
+                <button id="statusIdle" class="status-btn bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded font-semibold transition-colors">Idle</button>
+                <button id="statusDnd" class="status-btn bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-semibold transition-colors">Do Not Disturb</button>
+                <button id="statusInvisible" class="status-btn bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded font-semibold transition-colors">Invisible</button>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Custom Status Text (optional)</label>
+                <input type="text" id="customStatusTextInput" class="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="e.g., im gonna bake pancakes!" maxlength="128">
+                <div class="text-xs text-gray-400 mt-1">Set a custom status message that appears next to your status</div>
+            </div>
+        </div>
+
+        <!-- Auto Pressure Control -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
+            <h2 class="text-xl font-semibold mb-4 text-cyan-400">Auto Pressure</h2>
+            <button id="stopAutoPressureBtn" class="bg-red-600 hover:bg-red-700 px-6 py-2 rounded font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                Stop Auto Pressure
+            </button>
+        </div>
+
+        <!-- Save Button -->
+        <div class="flex justify-end">
+            <button id="saveBtn" class="bg-cyan-600 hover:bg-cyan-700 px-8 py-3 rounded-lg font-semibold transition-colors">
+                Save Settings
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
