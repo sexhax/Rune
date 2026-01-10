@@ -29,6 +29,8 @@ type Config struct {
 	GeminiAPIKey        string `json:"gemini_api_key"`
 	AutoResponseEnabled bool   `json:"auto_response_enabled"`
 	AutoResponsePhrase  string `json:"auto_response_phrase"`
+	AutoReactEmojiEnabled bool `json:"auto_emoji_enabled"`
+	AutoReactEmoji string `json:"auto_emoji"`
 }
 
 type Message struct {
@@ -100,7 +102,7 @@ var (
 	apActive            bool
 	apStopChan          chan bool
 	apTargetID          string
-	apWords             = []string{"je kanker vader", "Clown", "Bozo",   "Cry", "Skill issue", "nigger", "ape", "monkey boy", "ching chong", "vaderloos kankerjong", "zemmer", "vieze vuile kanker aap", "dikke strontneger"}
+	apWords             = []string{"je kanker vader", "Ratio", "Clown", "Bozo",   "Cry", "Skill issue", "nigger", "ape", "monkey boy", "ching chong", "vaderloos kankerjong", "zemmer", "vieze vuile kanker aap", "dikke strontneger"}
 
 	currentStatus = StatusOnline
 
@@ -137,7 +139,7 @@ func init() {
 	}
 
 	if config.GeminiAPIKey == "" || config.GeminiAPIKey == "YOUR_GEMINI_API_KEY" {
-		// fmt.Println("Please set your Gemini API key in config.json for the &ai command")
+		fmt.Println("Please set your Gemini API key in config.json for the &ai command")
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -171,7 +173,6 @@ type WeatherData struct {
 	Name string `json:"name"`
 }
 
-// finally fixed bans
 func triggerTyping(channelID string) {
 	req, err := http.NewRequest(
 		"POST",
@@ -202,7 +203,6 @@ func triggerTyping(channelID string) {
 	time.Sleep(time.Duration(delay) * time.Millisecond)
 }
 
-// made ap a little bit slower but fixed account termination issues in ap
 func triggerTypingAP(channelID string) {
 	req, err := http.NewRequest(
 		"POST",
@@ -397,6 +397,10 @@ func listenForMessages() {
 					statsMutex.Unlock()
 
 					ownerIDStr := config.OwnerID
+		if message.Author.ID == ownerIDStr && config.AutoReactEmojiEnabled && config.AutoReactEmoji != "" {
+			fmt.Printf("DEBUG: Auto-reacting with %s\n", config.AutoReactEmoji)
+			go sendReaction(message.ChannelID, message.ID, config.AutoReactEmoji)
+		}
 					if message.Author.ID != ownerIDStr && autoResponderEnabled {
 						selfMentioned := false
 						for _, mention := range message.Mentions {
@@ -433,12 +437,16 @@ func listenForMessages() {
     commandsHandled++
     statsMutex.Unlock()
 
+    // Trigger typing indicator and simulate human delay
     go func(channelID string) {
        triggerTyping(channelID)
-	   // not needed i think (will probs regret commenting this out)
-        /* delay := 2000 + rand.Intn(501)
+
+        // Random delay between 2.0 and 2.5 seconds
+        delay := 2000 + rand.Intn(501) // 2000-2500 ms
         time.Sleep(time.Duration(delay) * time.Millisecond)
-        handleMessage(message) */
+
+        // Now process the command after "typing"
+        handleMessage(message)
     }(message.ChannelID)
 
     // Do not call handleMessage directly — it's now async after typing
@@ -677,6 +685,9 @@ func handleMessage(message Message) {
 	case "nsfw":
 		fmt.Println("Executing NSFW command...")
 		handleNSFW(message)
+	case "react":
+		fmt.Println("Setting/removing reaction")
+		handleReact(message, args)
 	case "psearch":
 		fmt.Println("Executing pornhubsearch command...")
 		handlePornhubSearch(message, args)
@@ -897,7 +908,7 @@ func handlePing(message Message) {
 
 	latency := time.Since(start).Milliseconds()
 
-	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nPong! Latency: %dms```", latency))
+	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🏓 Pong! Latency: %dms```", latency))
 }
 
 func handleAutoResponder(message Message) {
@@ -911,6 +922,65 @@ func handleAutoResponder(message Message) {
 
 	fmt.Printf("Auto responder %s\n", status)
 	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nAuto responder %s```", status))
+}
+
+func handleReact(message Message, args []string) {
+    oldEmoji := config.AutoReactEmoji
+    status := ""
+
+    if len(args) == 0 || strings.ToLower(args[0]) == "off" {
+        config.AutoReactEmojiEnabled = false
+        config.AutoReactEmoji = ""
+        status = "disabled"
+    } else {
+        emoji := strings.Join(args, " ")
+        config.AutoReactEmojiEnabled = true
+        config.AutoReactEmoji = emoji
+        status = fmt.Sprintf("enabled with %s", emoji)
+    }
+
+    if err := saveConfig(); err != nil {
+        sendMessage(message.ChannelID,
+            fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nError saving auto-react config: %s```", err.Error()))
+        config.AutoReactEmoji = oldEmoji
+        config.AutoReactEmojiEnabled = oldEmoji != ""
+        return
+    }
+
+    sendMessage(message.ChannelID,
+        fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nAuto-react %s```", status))
+
+    fmt.Printf("DEBUG: AutoReactEmojiEnabled=%v, AutoReactEmoji=%s\n",
+        config.AutoReactEmojiEnabled, config.AutoReactEmoji)
+}
+//REST endpoint bla bla bla
+func sendReaction(channelID, messageID, emoji string) {
+    encodedEmoji := url.QueryEscape(emoji)
+    url := fmt.Sprintf(
+        "https://discord.com/api/v10/channels/%s/messages/%s/reactions/%s/@me",
+        channelID, messageID, encodedEmoji,
+    )
+
+    req, err := http.NewRequest("PUT", url, nil)
+    if err != nil {
+        fmt.Println("Failed to create reaction request:", err)
+        return
+    }
+
+    req.Header.Set("Authorization", config.Token)
+    req.Header.Set("User-Agent", "Mozilla/5.0")
+
+    resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        fmt.Println("Failed to send reaction:", err)
+        return
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != 204 {
+        body, _ := io.ReadAll(resp.Body)
+        fmt.Printf("Reaction failed (emoji %s): %d %s\n", emoji, resp.StatusCode, string(body))
+    }
 }
 
 func handleFemboy(message Message, args []string) {
@@ -989,11 +1059,11 @@ func handleRoll(message Message, args []string) {
 	rand.Seed(time.Now().UnixNano())
 	result := rand.Intn(sides) + 1
 
-	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nYou rolled a %d (d%d)```", result, sides))
+	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🎲 You rolled a %d (d%d)```", result, sides))
 }
 
 func handleRizz(message Message, args []string) {
-	statusMsgID := sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nFetching rizz line...```")
+	statusMsgID := sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🔄 Fetching rizz line...```")
 
 	type RizzResponse struct {
 		ID       string `json:"_id"`
@@ -1046,7 +1116,7 @@ func handleRizz(message Message, args []string) {
 		line = fallbackLines[rand.Intn(len(fallbackLines))]
 	}
 
-	editMessage(message.ChannelID, statusMsgID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n%s```", line))
+	editMessage(message.ChannelID, statusMsgID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❤️ %s```", line))
 }
 
 func getLocationFromIP() (*IPGeolocation, error) {
@@ -1129,12 +1199,12 @@ func handleWeather(message Message) {
 	args := strings.Fields(message.Content)[1:]
 	location := ""
 
-	statusMsg := "Fetching weather data"
+	statusMsg := "🔄 Fetching weather data"
 	statusMsgID := sendMessage(message.ChannelID, statusMsg)
 
 	if len(args) > 0 {
 		location = strings.Join(args, " ")
-		statusMsg = fmt.Sprintf("Fetching weather for %s", location)
+		statusMsg = fmt.Sprintf("🔄 Fetching weather for %s", location)
 		editMessage(message.ChannelID, statusMsgID, statusMsg)
 	}
 
@@ -1145,12 +1215,12 @@ func handleWeather(message Message) {
 	if location != "" {
 		locationData, err := getLocationCoordinates(location)
 		if err != nil {
-			editMessage(message.ChannelID, statusMsgID, "Error: "+err.Error())
+			editMessage(message.ChannelID, statusMsgID, "❌ Error: "+err.Error())
 			return
 		}
 
 		if len(locationData) == 0 {
-			editMessage(message.ChannelID, statusMsgID, "Location not found")
+			editMessage(message.ChannelID, statusMsgID, "❌ Location not found")
 			return
 		}
 
@@ -1178,7 +1248,7 @@ func handleWeather(message Message) {
 
 	weatherData, err := getWeatherData(lat, lon)
 	if err != nil {
-		editMessage(message.ChannelID, statusMsgID, "Error fetching weather: "+err.Error())
+		editMessage(message.ChannelID, statusMsgID, "❌ Error fetching weather: "+err.Error())
 		return
 	}
 
@@ -1256,11 +1326,11 @@ func formatWeatherMessage(data *WeatherData, location string) string {
 	emoji := getWeatherEmoji(condition)
 
 	return fmt.Sprintf("**Weather for %s** %s\n\n"+
-		"Temperature: **%.1f°C**\n"+
-		"Feels like: **%.1f°C**\n"+
-		"Humidity: **%d%%**\n"+
-		"Wind: **%.1f m/s**\n"+
-		"Condition: **%s**",
+		"🌡️ Temperature: **%.1f°C**\n"+
+		"🤔 Feels like: **%.1f°C**\n"+
+		"💧 Humidity: **%d%%**\n"+
+		"💨 Wind: **%.1f m/s**\n"+
+		"🔍 Condition: **%s**",
 		location, emoji,
 		data.Main.Temp,
 		data.Main.FeelsLike,
@@ -1308,7 +1378,7 @@ func handleQuote(message Message) {
 	rand.Seed(time.Now().UnixNano())
 	quote := quotes[rand.Intn(len(quotes))]
 
-	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n%s```", quote))
+	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n📜 %s```", quote))
 }
 
 func handleStats(message Message) {
@@ -1366,7 +1436,7 @@ func handleClear(message Message, args []string) {
 
 	deletedCount := deleteMessages(message.ChannelID, count)
 
-	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nDeleted %d messages.```", deletedCount))
+	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🗑️ Deleted %d messages.```", deletedCount))
 }
 
 func handleAvatar(message Message) {
@@ -1627,7 +1697,7 @@ func handleJoke(message Message) {
 		return
 	}
 
-	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n%s```", jokeResp.Joke))
+	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n😂 %s```", jokeResp.Joke))
 }
 
 type UrbanDefinition struct {
@@ -1754,7 +1824,7 @@ func handleEncode(message Message, args []string) {
 	text := strings.Join(args, " ")
 	encoded := base64.StdEncoding.EncodeToString([]byte(text))
 
-	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nEncoded: %s```", encoded))
+	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🔐 Encoded: %s```", encoded))
 }
 
 func handleDecode(message Message, args []string) {
@@ -1766,11 +1836,11 @@ func handleDecode(message Message, args []string) {
 	text := strings.Join(args, " ")
 	decoded, err := base64.StdEncoding.DecodeString(text)
 	if err != nil {
-		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nInvalid base64 encoding```")
+		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ Invalid base64 encoding```")
 		return
 	}
 
-	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n Decoded: %s```", string(decoded)))
+	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🔓 Decoded: %s```", string(decoded)))
 }
 
 func handleMemePhrase(message Message) {
@@ -1834,7 +1904,7 @@ func handleSetPrefix(message Message, args []string) {
 	if strings.ToLower(newPrefix) == "off" {
 		newPrefix = ""
 	} else if len(newPrefix) != 1 {
-		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nPrefix must be a single symbol character or 'off'```")
+		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ Prefix must be a single symbol character or 'off'```")
 		return
 	}
 
@@ -1843,15 +1913,15 @@ func handleSetPrefix(message Message, args []string) {
 	config.Prefix = newPrefix
 
 	if err := saveConfig(); err != nil {
-		sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nError saving new prefix: %s```", err.Error()))
+		sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ Error saving new prefix: %s```", err.Error()))
 		config.Prefix = oldPrefix
 		return
 	}
 
 	if newPrefix == "" {
-		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nPrefix disabled. Commands can now be used without a prefix```")
+		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n✅ Prefix disabled. Commands can now be used without a prefix```")
 	} else {
-		sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nPrefix changed from '%s' to '%s'```", oldPrefix, newPrefix))
+		sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n✅ Prefix changed from '%s' to '%s'```", oldPrefix, newPrefix))
 	}
 }
 
@@ -1868,12 +1938,12 @@ func handleSetPhrase(message Message, args []string) {
 	config.AutoResponsePhrase = ragingDemon
 
 	if err := saveConfig(); err != nil {
-		sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nError saving new phrase: %s```", err.Error()))
+		sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ Error saving new phrase: %s```", err.Error()))
 		config.AutoResponsePhrase = oldDemon
 		return
 	}
 
-	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nPhrase changed from '%s' to '%s'```", oldDemon, ragingDemon))
+	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n✅ Phrase changed from '%s' to '%s'```", oldDemon, ragingDemon))
 }
 
 func handleIPLookup(message Message, args []string) {
@@ -1882,7 +1952,7 @@ func handleIPLookup(message Message, args []string) {
 	if len(args) == 0 {
 		ipInfo, err := getUserLocationFromIP()
 		if err != nil {
-			sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nError getting your IP information```")
+			sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ Error getting your IP information```")
 			return
 		}
 
@@ -1895,7 +1965,7 @@ func handleIPLookup(message Message, args []string) {
 	apiURL := fmt.Sprintf("http://ip-api.com/json/%s", url.QueryEscape(ip))
 	resp, err := http.Get(apiURL)
 	if err != nil {
-		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nError connecting to IP lookup service```")
+		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ Error connecting to IP lookup service```")
 		return
 	}
 	defer resp.Body.Close()
@@ -1918,12 +1988,12 @@ func handleIPLookup(message Message, args []string) {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nError parsing IP lookup result```")
+		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ Error parsing IP lookup result```")
 		return
 	}
 
 	if result.Status != "success" {
-		sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nIP lookup failed for %s```", ip))
+		sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ IP lookup failed for %s```", ip))
 		return
 	}
 
@@ -1947,17 +2017,17 @@ func handleIPLookup(message Message, args []string) {
 }
 
 func handleTits(message Message) {
-	statusMsgID := sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nFinding boobies...```")
+	statusMsgID := sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🔄 Finding boobies...```")
 
 	resp, err := http.Get("https://api.nekosapi.com/v4/images/random?tags=large_breasts")
 	if err != nil {
-		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nFailed to get image: Connection error```")
+		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ Failed to get image: Connection error```")
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		editMessage(message.ChannelID, statusMsgID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nAPI returned error: %s```", resp.Status))
+		editMessage(message.ChannelID, statusMsgID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ API returned error: %s```", resp.Status))
 		return
 	}
 
@@ -1966,12 +2036,12 @@ func handleTits(message Message) {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&images); err != nil {
-		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nFailed to parse response```")
+		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ Failed to parse response```")
 		return
 	}
 
 	if len(images) == 0 {
-		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nNo images found```")
+		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ No images found```")
 		return
 	}
 
@@ -1979,21 +2049,21 @@ func handleTits(message Message) {
 	randomIndex := rand.Intn(len(images))
 	imageURL := images[randomIndex].URL
 
-	editMessage(message.ChannelID, statusMsgID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nEnjoy:```\n%s", imageURL))
+	editMessage(message.ChannelID, statusMsgID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🍒 Enjoy:```\n%s", imageURL))
 }
 
 func handleCatgirl(message Message) {
-	statusMsgID := sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nFinding catgirls...```")
+	statusMsgID := sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🔄 Finding catgirls...```")
 
 	resp, err := http.Get("https://api.nekosapi.com/v4/images/random?tags=catgirl,large_breasts,exposed_girl_breasts")
 	if err != nil {
-		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nFailed to get image: Connection error```")
+		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ Failed to get image: Connection error```")
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		editMessage(message.ChannelID, statusMsgID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nAPI returned error: %s```", resp.Status))
+		editMessage(message.ChannelID, statusMsgID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ API returned error: %s```", resp.Status))
 		return
 	}
 
@@ -2002,12 +2072,12 @@ func handleCatgirl(message Message) {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&images); err != nil {
-		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nFailed to parse response```")
+		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ Failed to parse response```")
 		return
 	}
 
 	if len(images) == 0 {
-		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nNo images found```")
+		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ No images found```")
 		return
 	}
 
@@ -2015,7 +2085,7 @@ func handleCatgirl(message Message) {
 	randomIndex := rand.Intn(len(images))
 	imageURL := images[randomIndex].URL
 
-	editMessage(message.ChannelID, statusMsgID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nEnjoy:```\n%s", imageURL))
+	editMessage(message.ChannelID, statusMsgID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🍒 Enjoy:```\n%s", imageURL))
 }
 
 func handlePornhubSearch(message Message, args []string) {
@@ -2028,7 +2098,7 @@ func handlePornhubSearch(message Message, args []string) {
 
 	pornhubURL := fmt.Sprintf("https://www.pornhub.com/video/search?search=%s", searchQuery)
 
-	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nPornHub Search:```\n%s", pornhubURL))
+	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🔍 PornHub Search:```\n%s", pornhubURL))
 }
 
 func handleGoogleSearch(message Message, args []string) {
@@ -2041,11 +2111,9 @@ func handleGoogleSearch(message Message, args []string) {
 
 	googleURL := fmt.Sprintf("https://www.google.com/search?q=%s", searchQuery)
 
-	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nGoogle Search:```\n%s", googleURL))
+	sendMessage(message.ChannelID, fmt.Sprintf("```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🔍 Google Search:```\n%s", googleURL))
 }
 
-
-// use tinyurl api to create shortened url
 func handleShortenURL(message Message, args []string) {
 	if len(args) == 0 {
 		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nPlease provide a URL to shorten```")
@@ -2054,24 +2122,24 @@ func handleShortenURL(message Message, args []string) {
 
 	longURL := args[0]
 
-	statusMsgID := sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nShortening URL...```")
+	statusMsgID := sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n🔄 Shortening URL...```")
 
 	apiURL := fmt.Sprintf("https://tinyurl.com/api-create.php?url=%s", url.QueryEscape(longURL))
 	resp, err := http.Get(apiURL)
 	if err != nil {
-		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n Error connecting to URL shortener```")
+		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ Error connecting to URL shortener```")
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nFailed to shorten URL: service error```")
+		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ Failed to shorten URL: service error```")
 		return
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nFailed to read response```")
+		editMessage(message.ChannelID, statusMsgID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\n❌ Failed to read response```")
 		return
 	}
 
@@ -2084,8 +2152,6 @@ func handleAI(message Message) {
 		sendMessage(message.ChannelID, "```ansi\n\u001b[0;36m[RUNE]\u001b[0m``````ansi\nFunction removed due to gemini being a gay retard.```")
 		return
 }
-
-//					AI, got removed because google became retarted
 
 /* func handleAI(message Message, args []string) {
 	if len(args) == 0 {
@@ -2186,7 +2252,6 @@ func handleAI(message Message) {
 	}
 } */
 
-// write to config.json used for setphrase and setprefix
 func saveConfig() error {
 	configData, err := json.MarshalIndent(config, "", "    ")
 	if err != nil {
@@ -2200,14 +2265,12 @@ func saveConfig() error {
 	return nil
 }
 
-
 func main() {
 	fmt.Println("Starting...")
 	fmt.Printf("Using token: %s...\n", config.Token[:15])
 	fmt.Printf("Owner ID: %.0f\n", config.OwnerID)
 	fmt.Printf("Command prefix: %s\n", config.Prefix)
 
-	// connect dcord websocket
 	if err := connectWebsocket(); err != nil {
 		fmt.Printf("Error connecting to gateway: %v\n", err)
 		os.Exit(1)
