@@ -142,6 +142,8 @@ func init() {
 		fmt.Println("Please set your Gemini API key in config.json for the &ai command")
 	}
 
+	autoResponderEnabled = config.AutoResponseEnabled
+
 	rand.Seed(time.Now().UnixNano())
 }
 
@@ -187,7 +189,8 @@ func triggerTyping(channelID string) {
 	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36")
 	req.Header.Set("Content-Type", "application/json")
 
-	time.Sleep(1 * time.Second)
+
+	//time.Sleep(1 * time.Second) (make faster )
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return
@@ -199,7 +202,7 @@ func triggerTyping(channelID string) {
 		return
 	}
 
-	delay := 500 + rand.Intn(500) 
+	delay := rand.Intn(250) 
 	time.Sleep(time.Duration(delay) * time.Millisecond)
 }
 
@@ -437,13 +440,13 @@ func listenForMessages() {
     commandsHandled++
     statsMutex.Unlock()
 
-    // Trigger typing indicator and simulate human delay
+    // Trigger typing indicator and simulate huma shi
     go func(channelID string) {
        triggerTyping(channelID)
 
-        // Random delay between 2.0 and 2.5 seconds
-        delay := 2000 + rand.Intn(501) // 2000-2500 ms
-        time.Sleep(time.Duration(delay) * time.Millisecond)
+        // Random delay between 2.0 and 2.5 seconds (removed to make faster)
+        //delay := 2000 + rand.Intn(501) // 2000-2500 ms
+        //time.Sleep(time.Duration(delay) * time.Millisecond)
 
         // Now process the command after "typing"
         handleMessage(message)
@@ -1597,7 +1600,7 @@ func handleStatus(message Message, args []string) {
 	if len(args) == 0 {
 		sendMessage(
 			message.ChannelID,
-			"```ansi\n\u001b[0;36m[RUNE]\u001b[0m\nPlease provide a status: online, idle, dnd, invisible```",
+			"```ansi\n\u001b[0;36m[RUNE]\u001b[0m\nPlease provide a status: online, idle, dnd, invisible\nUsage: &status <status> [custom text]```",
 		)
 		return
 	}
@@ -1622,7 +1625,12 @@ func handleStatus(message Message, args []string) {
 		return
 	}
 
-	if err := updateStatusREST(statusText); err != nil {
+	var customText string
+	if len(args) > 1 {
+		customText = strings.Join(args[1:], " ")
+	}
+
+	if err := updateStatusREST(statusText, customText); err != nil {
 		sendMessage(
 			message.ChannelID,
 			fmt.Sprintf(
@@ -1635,21 +1643,36 @@ func handleStatus(message Message, args []string) {
 
 	currentStatus = statusText
 
+	responseMsg := fmt.Sprintf("Status updated to %s", status)
+	if customText != "" {
+		responseMsg = fmt.Sprintf("Status updated to %s with text: %s", status, customText)
+	}
+
 	sendMessage(
 		message.ChannelID,
 		fmt.Sprintf(
-			"```ansi\n\u001b[0;36m[RUNE]\u001b[0m\nStatus updated to %s```",
-			status,
+			"```ansi\n\u001b[0;36m[RUNE]\u001b[0m\n%s```",
+			responseMsg,
 		),
 	)
 }
 
-func updateStatusREST(status string) error {
+func updateStatusREST(status string, customText string) error {
 	url := "https://discord.com/api/v10/users/@me/settings"
 
 	payload := map[string]interface{}{
-		"status": status,       // online, idle, dnd, invisible
-		"custom_status": nil,
+		"status": status, // online, idle, dnd, invisible
+	}
+
+	// Set custom status if text is provided
+	if customText != "" {
+		payload["custom_status"] = map[string]interface{}{
+			"text":      customText,
+			"emoji_id":  nil,
+			"emoji_name": nil,
+		}
+	} else {
+		payload["custom_status"] = nil
 	}
 
 	body, err := json.Marshal(payload)
@@ -2278,6 +2301,7 @@ func main() {
 
 	fmt.Println("Running. Press Ctrl+C to exit.")
 	go listenForMessages()
+	go StartUIServer("80")
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
