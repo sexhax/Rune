@@ -2291,7 +2291,7 @@ func saveConfig() error {
 func main() {
 	fmt.Println("Starting...")
 	fmt.Printf("Using token: %s...\n", config.Token[:15])
-	fmt.Printf("Owner ID: %.0f\n", config.OwnerID)
+	fmt.Printf("Owner ID: %s\n", config.OwnerID)
 	fmt.Printf("Command prefix: %s\n", config.Prefix)
 
 	if err := connectWebsocket(); err != nil {
