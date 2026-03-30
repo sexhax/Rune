@@ -14,7 +14,7 @@ import (
 
 var (
 	configMutex sync.RWMutex
-	uiPort      = "8080"
+	uiPort      = "3000"
 )
 
 // SafeConfig represents config without sensitive data
