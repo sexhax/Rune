@@ -139,7 +139,7 @@ func init() {
 	}
 
 	if config.GeminiAPIKey == "" || config.GeminiAPIKey == "YOUR_GEMINI_API_KEY" {
-		fmt.Println("Please set your Gemini API key in config.json for the &ai command")
+		fmt.Println("Please set your Gemini API key in config.json for the &ai command (this message is shown even if api key is active, gemini became retarted)")
 	}
 
 	autoResponderEnabled = config.AutoResponseEnabled
